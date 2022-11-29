@@ -1,39 +1,32 @@
 let snokHead = document.getElementById("snokHead");
 let game = document.getElementById("game");
+let score = document.getElementById("score");
 
+let nextRotation = "";
+let scoreValue = 0;
 let bodyPartId = 0;
 let bottom = 0;
 let left = 50;
-let rotation = -45;
-let speed = 2;
+let rotation = -50;
+let speed = 1;
 let length = 60;
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keypress", (e) => {
     //console.log("e", e.key);
 
     switch (e.key) {
         case "d":
         case "ArrowRight":
-            rotation += 5;
+            nextRotation = "right";
             break;
 
         case "a":
         case "ArrowLeft":
-            rotation -= 5;
-            break;
-
-        case "s":
-        case "ArrowDown":
-            speed -= 1;
-            break;
-
-        case "w":
-        case "ArrowUp":
-            speed += 1;
+            nextRotation = "left";
             break;
 
     }
-})
+});
 
 function toRadians(angle) {
     return angle * (Math.PI / 180);
@@ -54,10 +47,40 @@ let snokMovement = setInterval(() => {
     //console.log("move Y", moveY)
     bottom -= moveY;
     snokHead.style.bottom = bottom + "px";
+
+    //check if out of bounds
+    let clientWidth = document.documentElement.clientWidth;
+    let clientHeight = document.documentElement.clientHeight;
+    let safeMargin = 15;
+    let safeMarginExtra = 30;
+    if (left > clientWidth + safeMargin) {
+        left = 0 - safeMarginExtra;
+    }
+    if (left < 0 - safeMarginExtra) {
+        left = clientWidth + safeMargin;
+    }
+    if (bottom > clientHeight + safeMargin) {
+        bottom = 0 - safeMarginExtra;
+    }
+    if (bottom < 0 - safeMarginExtra) {
+        bottom = clientHeight + safeMargin;
+    }
+
     if (frame > 10) {
         createBodyPart();
         frame = 0;
+        if (nextRotation != "") {
+            if (nextRotation == "left") {
+                rotation -= 10;
+            }
+            else if (nextRotation == "right") {
+                rotation += 10;
+            }
+            nextRotation = "";
+        }
     }
+
+
 }, 16);
 
 function createBodyPart() {
@@ -82,12 +105,16 @@ function createBodyPart() {
     }, 16);
 }
 
-
 function createFood() {
     let food = document.createElement("div");
     food.classList = "food";
-    let foodLeft = Math.round(Math.round(Math.random() * 500) / 10) * 10;
-    let foodBottom = Math.round(Math.round(Math.random() * 500) / 10) * 10;
+    let clientWidth = document.documentElement.clientWidth - 30;
+    let clientHeight = document.documentElement.clientHeight - 30;
+    let foodLeft = Math.round(Math.round(Math.random() * clientWidth) / 10) * 10;
+    foodLeft += 15;
+    let foodBottom =
+        Math.round(Math.round(Math.random() * clientHeight) / 10) * 10;
+    foodBottom += 15;
 
     food.style.left = foodLeft + "px";
     food.style.bottom = foodBottom + "px";
@@ -103,43 +130,16 @@ function createFood() {
             clearInterval(checkIfEaten);
             length += addValue;
             let currentParts = document.getElementsByClassName("bodyPart");
-            for(i = 0; i < currentParts.length; i++){
+            for (i = 0; i < currentParts.length; i++) {
                 let newIntValue = parseInt(currentParts[i].style.zIndex) + addValue;
                 currentParts[i].style.zIndex = newIntValue;
             }
+            scoreValue++;
+            score.innerHTML = "Score:" + scoreValue;
             food.remove();
             createFood();
         }
     }, 16);
-
-
-    // let move = setInterval(() => {
-    //     foodLeft -= 50;
-    //     food.style.left = foodLeft + "px";
-
-    //     if (foodBottom > bottom && foodBottom < bottom + 150 && foodLeft === left) {
-    //         console.log("HIT");
-
-    //         let dead = setInterval(() => {
-    //             hero.style.backgroundColor = "red";
-
-    //             let resurect = setInterval(() => {
-    //                 hero.style.backgroundColor = "purple"
-    //                 clearInterval(dead)
-    //             }, 100)
-
-    //         }, 100)
-
-
-    //     }
-
-    //     if (foodLeft <= 0) {
-    //         clearInterval(move);
-    //         food.remove();
-    //         createFood();
-    //     }
-
-    // }, 50)
 
     game.appendChild(food);
 }
